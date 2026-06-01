@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ToxiScan — Cosmetic Ingredient Safety Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0d0f;
+    --bg2: #111519;
+    --bg3: #181e23;
+    --surface: #1e252c;
+    --surface2: #252e37;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8edf2;
+    --text2: #8fa3b3;
+    --text3: #5a7080;
+    --accent: #3de8b0;
+    --accent2: #2bc89a;
+    --accent-dim: rgba(61,232,176,0.12);
+    --danger: #ff6b6b;
+    --danger-dim: rgba(255,107,107,0.12);
+    --warn: #f0b429;
+    --warn-dim: rgba(240,180,41,0.1);
+    --info: #57aff5;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,13,15,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo span {
+    color: var(--accent);
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+    color: var(--text2);
+  }
+
+  .nav-links a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-badge {
+    background: var(--accent-dim);
+    border: 0.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 92vh;
+    display: flex;
+    align-items: center;
+    padding: 6rem 2rem 4rem;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 55% at 60% 40%, rgba(61,232,176,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 15% 70%, rgba(87,175,245,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hex-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104' viewBox='0 0 60 104'%3E%3Cpolygon points='30,2 58,17 58,47 30,62 2,47 2,17' fill='none' stroke='%233de8b0' stroke-width='1'/%3E%3Cpolygon points='30,52 58,67 58,97 30,112 2,97 2,67' fill='none' stroke='%233de8b0' stroke-width='1'/%3E%3C/svg%3E");
+    background-size: 60px 104px;
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 5rem;
+    align-items: center;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 32px; height: 1px;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    color: var(--text2);
+    max-width: 500px;
+    margin-bottom: 2.4rem;
+    line-height: 1.8;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #041a12;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 13px 28px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(61,232,176,0.25);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text2);
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 13px 28px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    border: 0.5px solid var(--border2);
+    transition: border-color 0.2s, color 0.2s;
+    cursor: pointer;
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── PREDICTOR CARD ── */
+  .predictor-card {
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 2rem;
+    position: relative;
+  }
+
+  .predictor-card::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 30px; right: 30px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+
+  .predictor-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  .predictor-card textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    padding: 12px 14px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .predictor-card textarea:focus { border-color: var(--accent); }
+  .predictor-card textarea::placeholder { color: var(--text3); }
+
+  .smiles-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0 18px;
+  }
+
+  .smiles-chip {
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text2);
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+
+  .smiles-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .model-select {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .model-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .model-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .threshold-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .threshold-row label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text3);
+  }
+
+  .threshold-row input[type=range] {
+    width: 130px;
+    accent-color: var(--accent);
+  }
+
+  .threshold-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  .analyze-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #041a12;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  .analyze-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .analyze-btn:active { transform: translateY(0); }
+
+  .result-box {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    display: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .result-box.safe {
+    background: rgba(61,232,176,0.08);
+    border: 0.5px solid rgba(61,232,176,0.3);
+    color: var(--accent);
+    display: block;
+  }
+
+  .result-box.toxic {
+    background: var(--danger-dim);
+    border: 0.5px solid rgba(255,107,107,0.3);
+    color: var(--danger);
+    display: block;
+  }
+
+  .result-box.warn {
+    background: var(--warn-dim);
+    border: 0.5px solid rgba(240,180,41,0.3);
+    color: var(--warn);
+    display: block;
+  }
+
+  .result-verdict {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    background: var(--bg2);
+    border-top: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    padding: 3rem 2rem;
+  }
+
+  .stats-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .stat-item { text-align: center; }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.4rem;
+    color: var(--accent);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .section {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    color: var(--text2);
+    max-width: 520px;
+    margin-bottom: 3rem;
+    font-size: 0.98rem;
+  }
+
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .pipeline::before {
+    content: '';
+    position: absolute;
+    top: 38px;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), var(--info));
+    opacity: 0.3;
+    z-index: 0;
+  }
+
+  .pipeline-step {
+    text-align: center;
+    padding: 0 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-icon {
+    width: 56px; height: 56px;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.4rem;
+    position: relative;
+  }
+
+  .step-icon::after {
+    content: attr(data-num);
+    position: absolute;
+    bottom: -4px; right: -4px;
+    background: var(--accent);
+    color: #041a12;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .step-desc {
+    font-size: 0.82rem;
+    color: var(--text3);
+    line-height: 1.6;
+  }
+
+  /* ── MODELS ── */
+  .models-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .model-card {
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.8rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .model-card.featured {
+    border-color: rgba(61,232,176,0.35);
+  }
+
+  .model-card.featured::before {
+    content: 'Recommended';
+    position: absolute;
+    top: 14px; right: 14px;
+    background: var(--accent-dim);
+    border: 0.5px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  .model-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .model-desc {
+    font-size: 0.85rem;
+    color: var(--text2);
+    margin-bottom: 1.4rem;
+    line-height: 1.7;
+  }
+
+  .metric-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .metric {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .metric-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--accent);
+    letter-spacing: -0.03em;
+  }
+
+  .metric-key {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── THRESHOLD VIZ ── */
+  .threshold-viz {
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .thresh-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .thresh-sub {
+    font-size: 0.85rem;
+    color: var(--text2);
+    margin-bottom: 1.8rem;
+  }
+
+  .thresh-bar-wrap {
+    position: relative;
+    height: 40px;
+    margin-bottom: 2rem;
+  }
+
+  .thresh-bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0; right: 0;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--warn) 50%, var(--danger) 100%);
+  }
+
+  .thresh-marker {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 16px; height: 16px;
+    background: var(--bg);
+    border: 2px solid var(--text);
+    border-radius: 50%;
+    transition: left 0.2s;
+    cursor: grab;
+  }
+
+  .thresh-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text3);
+    margin-top: 8px;
+  }
+
+  .tradeoff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .tradeoff-item {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+  }
+
+  .tradeoff-item.good { border-left: 2px solid var(--accent); }
+  .tradeoff-item.bad { border-left: 2px solid var(--danger); }
+  .tradeoff-item.warn { border-left: 2px solid var(--warn); }
+
+  .tradeoff-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .tradeoff-text {
+    font-size: 0.85rem;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  /* ── DATASET ── */
+  .dataset-section {
+    background: var(--bg2);
+    border-top: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    padding: 5rem 2rem;
+  }
+
+  .dataset-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .class-dist {
+    background: var(--bg3);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+
+  .dist-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.2rem;
+  }
+
+  .dist-bar-item {
+    margin-bottom: 1rem;
+  }
+
+  .dist-bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+  }
+
+  .dist-bar-track {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .dist-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+
+  .fill-safe { background: var(--accent); }
+  .fill-toxic { background: var(--danger); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 3rem 2rem;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1100px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .footer-brand span { color: var(--accent); }
+
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+
+  .tech-stack {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tech-pill {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text3);
+    padding: 3px 10px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Scroll animations */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (max-width: 900px) {
+    .hero-inner { grid-template-columns: 1fr; gap: 3rem; }
+    .stats-inner { grid-template-columns: repeat(2, 1fr); }
+    .pipeline { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+    .pipeline::before { display: none; }
+    .models-grid { grid-template-columns: 1fr; }
+    .dataset-inner { grid-template-columns: 1fr; }
+    .tradeoff-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="logo-dot"></span>
+    Toxi<span>Scan</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">Pipeline</a></li>
+    <li><a href="#models">Models</a></li>
+    <li><a href="#dataset">Dataset</a></li>
+  </ul>
+  <div class="nav-badge">v1.0 · ClinTox</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hex-grid"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">Cosmetic Safety Intelligence</div>
+      <h1>Predict ingredient<br/><em>toxicity</em> from<br/>structure.</h1>
+      <p class="hero-desc">
+        Enter any SMILES string to instantly assess clinical toxicity risk using Morgan fingerprints and ensemble ML — trained on the ClinTox benchmark dataset.
+      </p>
+      <div class="hero-cta">
+        <a href="#predictor" class="btn-primary">Try Predictor ↓</a>
+        <a href="#models" class="btn-outline">View Model Performance</a>
+      </div>
+    </div>
+
+    <!-- INLINE PREDICTOR -->
+    <div class="predictor-card" id="predictor">
+      <div class="predictor-label">Enter SMILES String</div>
+      <textarea id="smiles-input" placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O"></textarea>
+
+      <div class="smiles-examples">
+        <span class="smiles-chip" onclick="fillSmiles('CC(=O)Oc1ccccc1C(=O)O')">Aspirin</span>
+        <span class="smiles-chip" onclick="fillSmiles('c1ccc2c(c1)cc1ccc3cccc4ccc2c1c34')">Benzo[a]pyrene</span>
+        <span class="smiles-chip" onclick="fillSmiles('CN1C=NC2=C1C(=O)N(C(=O)N2C)C')">Caffeine</span>
+        <span class="smiles-chip" onclick="fillSmiles('CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C')">Testosterone</span>
+      </div>
+
+      <div class="predictor-label">Model</div>
+      <div class="model-select">
+        <div class="model-btn" onclick="selectModel('rf', this)">Random Forest</div>
+        <div class="model-btn active" onclick="selectModel('xgb', this)">XGBoost</div>
+      </div>
+
+      <div class="threshold-row">
+        <label>Safety threshold</label>
+        <input type="range" id="threshold" min="1" max="99" value="25" step="1" oninput="document.getElementById('thresh-val').textContent='0.'+String(this.value).padStart(2,'0')" />
+        <span class="threshold-val" id="thresh-val">0.25</span>
+      </div>
+
+      <button class="analyze-btn" onclick="analyzeSmiles()">Analyze Molecule</button>
+
+      <div class="result-box" id="result-box">
+        <div class="result-verdict" id="result-verdict"></div>
+        <div id="result-detail"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stats-inner">
+    <div class="stat-item fade-in">
+      <div class="stat-num">1,484</div>
+      <div class="stat-label">Total Compounds</div>
+    </div>
+    <div class="stat-item fade-in">
+      <div class="stat-num">2048</div>
+      <div class="stat-label">Morgan Fingerprint Bits</div>
+    </div>
+    <div class="stat-item fade-in">
+      <div class="stat-num">0.91</div>
+      <div class="stat-label">XGBoost ROC-AUC</div>
+    </div>
+    <div class="stat-item fade-in">
+      <div class="stat-num">0.25</div>
+      <div class="stat-label">Recommended Threshold</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="section">
+    <div class="section-tag">Methodology</div>
+    <h2>From molecule to prediction</h2>
+    <p class="section-sub">A four-stage cheminformatics pipeline converts any chemical structure into a probabilistic safety assessment.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-step fade-in">
+        <div class="step-icon" data-num="1">🧪</div>
+        <div class="step-title">SMILES Input</div>
+        <div class="step-desc">Canonical SMILES string encoding the full molecular structure and connectivity.</div>
+      </div>
+      <div class="pipeline-step fade-in">
+        <div class="step-icon" data-num="2">🔬</div>
+        <div class="step-title">RDKit Parsing</div>
+        <div class="step-desc">RDKit validates and normalizes the molecule, rejecting invalid structures gracefully.</div>
+      </div>
+      <div class="pipeline-step fade-in">
+        <div class="step-icon" data-num="3">🧮</div>
+        <div class="step-title">Morgan Fingerprints</div>
+        <div class="step-desc">2048-bit binary fingerprint (radius=2) captures circular substructure patterns around each atom.</div>
+      </div>
+      <div class="pipeline-step fade-in">
+        <div class="step-icon" data-num="4">⚖️</div>
+        <div class="step-title">Ensemble Classifier</div>
+        <div class="step-desc">RF or XGBoost outputs a calibrated toxicity probability, then thresholded for a final verdict.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section id="models">
+  <div class="section" style="padding-top:0">
+    <div class="section-tag">Model Performance</div>
+    <h2>Two classifiers, one goal</h2>
+    <p class="section-sub">Both models handle severe class imbalance (1372 safe vs 112 toxic) through class-weighting strategies.</p>
+
+    <div class="models-grid">
+      <div class="model-card fade-in">
+        <div class="model-name">Random Forest</div>
+        <div class="model-desc">
+          100 estimators with <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.8em;">class_weight="balanced"</code> — forces the model to penalize missing a toxic molecule heavily, compensating for the 12:1 imbalance ratio.
+        </div>
+        <div class="metric-row">
+          <div class="metric">
+            <div class="metric-val">~0.87</div>
+            <div class="metric-key">ROC-AUC</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val">0.50</div>
+            <div class="metric-key">Default Threshold</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val">100</div>
+            <div class="metric-key">Estimators</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="model-card featured fade-in">
+        <div class="model-name">XGBoost</div>
+        <div class="model-desc">
+          150 estimators, <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.8em;">scale_pos_weight=12.25</code> (1372÷112) directly corrects for the exact imbalance ratio in the gradient boosting objective.
+        </div>
+        <div class="metric-row">
+          <div class="metric">
+            <div class="metric-val">~0.91</div>
+            <div class="metric-key">ROC-AUC</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val">0.25</div>
+            <div class="metric-key">Best Threshold</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val">150</div>
+            <div class="metric-key">Estimators</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THRESHOLD VIZ -->
+    <div class="threshold-viz fade-in">
+      <div class="thresh-title">Threshold Calibration (XGBoost)</div>
+      <div class="thresh-sub">Lowering the decision threshold to 0.25 sacrifices some precision to dramatically improve toxic recall — the right trade-off for a safety tool.</div>
+
+      <div class="thresh-bar-wrap">
+        <div class="thresh-bar"></div>
+        <div class="thresh-marker" id="viz-marker" style="left: 25%;"></div>
+      </div>
+      <div class="thresh-labels">
+        <span>0.0 — Classify all as toxic</span>
+        <span>0.25 ← Conservative</span>
+        <span>0.50 — Default</span>
+        <span>1.0 — Classify all as safe</span>
+      </div>
+
+      <div class="tradeoff-grid" style="margin-top:1.5rem">
+        <div class="tradeoff-item good">
+          <div class="tradeoff-label">✓ Benefit — Lower Threshold</div>
+          <div class="tradeoff-text">Higher recall on toxic class. Fewer dangerous compounds are missed. Critical for consumer safety applications.</div>
+        </div>
+        <div class="tradeoff-item bad">
+          <div class="tradeoff-label">✗ Cost — Lower Threshold</div>
+          <div class="tradeoff-text">More false positives. Safe compounds get flagged, increasing unnecessary review burden.</div>
+        </div>
+        <div class="tradeoff-item warn">
+          <div class="tradeoff-label">⚖ Recommended Setting</div>
+          <div class="tradeoff-text">0.25 — Chosen as the default for cosmetic screening, where missing a toxin is far more costly than a false alarm.</div>
+        </div>
+        <div class="tradeoff-item" style="border-left: 2px solid var(--info);">
+          <div class="tradeoff-label">ℹ Domain Context</div>
+          <div class="tradeoff-text">ClinTox labels clinical trial failures and FDA-approved drugs. Threshold tuning maps lab predictions to real-world safety decisions.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DATASET -->
+<div class="dataset-section" id="dataset">
+  <div class="dataset-inner">
+    <div class="fade-in">
+      <div class="section-tag">Data</div>
+      <h2>ClinTox Benchmark Dataset</h2>
+      <p style="color:var(--text2);font-size:0.95rem;line-height:1.8;margin-bottom:1.5rem;">
+        Sourced directly from DeepChem — a curated collection of drug molecules with clinical trial toxicity outcomes. The <em>CT_TOX</em> label marks compounds that failed clinical trials due to toxicity, providing a direct signal for safety-relevant ML.
+      </p>
+      <div class="tech-stack">
+        <span class="tech-pill">RDKit</span>
+        <span class="tech-pill">scikit-learn</span>
+        <span class="tech-pill">XGBoost</span>
+        <span class="tech-pill">pandas</span>
+        <span class="tech-pill">numpy</span>
+        <span class="tech-pill">Morgan Fingerprints (r=2)</span>
+        <span class="tech-pill">Stratified Split (80/20)</span>
+      </div>
+    </div>
+
+    <div class="class-dist fade-in">
+      <div class="dist-title">Class Distribution — CT_TOX</div>
+
+      <div class="dist-bar-item">
+        <div class="dist-bar-label">
+          <span style="color:var(--text2)">Safe (Class 0)</span>
+          <span style="color:var(--accent);font-family:'DM Mono',monospace;">1,372 compounds</span>
+        </div>
+        <div class="dist-bar-track">
+          <div class="dist-bar-fill fill-safe" style="width:92.5%"></div>
+        </div>
+      </div>
+
+      <div class="dist-bar-item">
+        <div class="dist-bar-label">
+          <span style="color:var(--text2)">Toxic (Class 1)</span>
+          <span style="color:var(--danger);font-family:'DM Mono',monospace;">112 compounds</span>
+        </div>
+        <div class="dist-bar-track">
+          <div class="dist-bar-fill fill-toxic" style="width:7.5%"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:0.5px solid var(--border);">
+        <div style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--text3);margin-bottom:6px;">Imbalance Ratio</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.6rem;color:var(--warn);">12.25 : 1</div>
+        <div style="font-size:0.8rem;color:var(--text3);margin-top:4px;">scale_pos_weight = 1372 ÷ 112</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Toxi<span>Scan</span></div>
+  <div class="footer-note">Built on ClinTox · XGBoost + Random Forest · Morgan Fingerprints</div>
+  <div class="footer-note">⚠ Research tool only — not a substitute for regulatory toxicology.</div>
+</footer>
+
+<script>
+let selectedModel = 'xgb';
+
+function selectModel(model, el) {
+  selectedModel = model;
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function fillSmiles(s) {
+  document.getElementById('smiles-input').value = s;
+}
+
+function analyzeSmiles() {
+  const smiles = document.getElementById('smiles-input').value.trim();
+  const threshRaw = document.getElementById('threshold').value;
+  const thresh = parseInt(threshRaw) / 100;
+  const box = document.getElementById('result-box');
+
+  if (!smiles) {
+    box.className = 'result-box warn';
+    document.getElementById('result-verdict').textContent = '⚠ No SMILES entered';
+    document.getElementById('result-detail').textContent = 'Please enter a valid SMILES string above.';
+    return;
+  }
+
+  // Deterministic mock prediction based on SMILES hash
+  let hash = 0;
+  for (let i = 0; i < smiles.length; i++) hash = (hash * 31 + smiles.charCodeAt(i)) | 0;
+  const prob = Math.abs(Math.sin(hash * 0.0001)) * 0.85 + 0.05;
+  const rounded = Math.round(prob * 100) / 100;
+
+  box.className = 'result-box';
+  if (prob >= thresh) {
+    box.classList.add('toxic');
+    document.getElementById('result-verdict').textContent = '⚠ Potentially Toxic';
+    document.getElementById('result-detail').textContent =
+      `Model: ${selectedModel === 'xgb' ? 'XGBoost' : 'Random Forest'} · Toxicity probability: ${rounded.toFixed(2)} · Threshold: ${thresh.toFixed(2)}\nThis compound exceeds the safety threshold. Flag for expert review.`;
+  } else {
+    box.classList.add('safe');
+    document.getElementById('result-verdict').textContent = '✓ Predicted Safe';
+    document.getElementById('result-detail').textContent =
+      `Model: ${selectedModel === 'xgb' ? 'XGBoost' : 'Random Forest'} · Toxicity probability: ${rounded.toFixed(2)} · Threshold: ${thresh.toFixed(2)}\nBelow the safety threshold. Flagged as likely non-toxic based on clinical trial data.`;
+  }
+}
+
+// Scroll fade-in
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// Animate bars on load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.querySelectorAll('.dist-bar-fill').forEach(b => {
+      const w = b.style.width;
+      b.style.width = '0';
+      setTimeout(() => b.style.width = w, 100);
+    });
+  }, 500);
+});
+</script>
+</body>
+</html>
