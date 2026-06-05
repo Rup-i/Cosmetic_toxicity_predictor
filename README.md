@@ -103,6 +103,16 @@ http://localhost:3000
 * Click **Analyze Molecule** to execute the pipeline.
 
 
+## The Final View
+
+This is how the final website will look like:
+
+<img width="1918" height="972" alt="image" src="https://github.com/user-attachments/assets/345a8077-ae9e-41bf-80e3-c2a93f95c9ae" />
+<img width="1913" height="916" alt="image" src="https://github.com/user-attachments/assets/2f067e63-44ab-4451-89f5-007da5b1d60a" />
+<img width="1912" height="916" alt="image" src="https://github.com/user-attachments/assets/5324570c-5457-47b8-bac6-6e4febf5d4fc" />
+<img width="1915" height="921" alt="image" src="https://github.com/user-attachments/assets/aea1ea48-d4de-44d3-984b-34d5fdf8db75" />
+<img width="1911" height="912" alt="image" src="https://github.com/user-attachments/assets/a49d35fe-cea6-43ad-9e6e-3061ab0c9bc5" />
+
 
 ---
 
